@@ -1,7 +1,26 @@
+# .github/dependabot.yml
+#
+# Purpose:
+# - Keep dependency updates predictable and quiet.
+# - Group security updates into fewer PRs.
+# - Group normal version updates by ecosystem.
+# - Use only the default "dependencies" label, so this file works in any repo.
+#
+# Adjust per repository:
+# - Keep only ecosystems that exist in the repo.
+# - Change directories to real paths, e.g. "/frontend/app", "/backend", "/infra".
+# - Remove directory patterns that do not exist if Dependabot complains.
+#
+# Important:
+# - This file must be located at .github/dependabot.yml
+# - It is NOT a GitHub Actions workflow.
+# - groups + applies-to: security-updates groups vulnerable dependency updates.
+# - cooldown delays normal version updates, not urgent security grouping behavior.
+
 version: 2
 
 updates:
-  # 1. GitHub Actions
+  # GitHub Actions: updates actions/checkout, setup-node, Trivy action, etc.
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -9,58 +28,72 @@ updates:
       day: "monday"
       time: "06:00"
       timezone: "Europe/Berlin"
-    cooldown:                 # delay to reduce supply-chain risk
-      default-days: 11
+    cooldown:
+      default-days: 14
     groups:
+      github-actions-security:
+        applies-to: security-updates
+        patterns: ["*"]
       github-actions-minor-patch:
+        applies-to: version-updates
         patterns: ["*"]
         update-types: ["minor", "patch"]
-      github-actions-major:   # majors isolated into their own PR
+      github-actions-major:
+        applies-to: version-updates
         patterns: ["*"]
         update-types: ["major"]
     labels:
       - "dependencies"
-      - "github-actions"
     commit-message:
-      prefix: "dependabot(github-actions)"
+      prefix: "dependabot(actions)"
       include: "scope"
     open-pull-requests-limit: 2
 
-  # 2. Terraform: providers
+  # Terraform: providers and modules
   - package-ecosystem: "terraform"
-    directories:       # add directories where terraform modules exist
+    directories:
       - "/"
+      - "/terraform"
+      - "/infra"
+      - "/infrastructure"
       - "/modules/*"
       - "/environments/*"
-      - "/environments/*/terraform_backend"
-      - "/terraform_backend"
-      - "/mongodb_atlas"
+      - "/envs/*"
     schedule:
       interval: "monthly"
+      day: "monday"
       time: "06:30"
       timezone: "Europe/Berlin"
     cooldown:
-      default-days: 14       # delay to reduce supply-chain risk
+      default-days: 14
     groups:
+      terraform-security:
+        applies-to: security-updates
+        patterns: ["*"]
       terraform-minor-patch:
+        applies-to: version-updates
         patterns: ["*"]
         update-types: ["minor", "patch"]
         group-by: dependency-name
-      terraform-major:        # major bumps land alone for review/notification
+      terraform-major:
+        applies-to: version-updates
         patterns: ["*"]
         update-types: ["major"]
         group-by: dependency-name
     labels:
       - "dependencies"
-      - "terraform"
     commit-message:
       prefix: "dependabot(terraform)"
       include: "scope"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
 
-  # 3. Frontend / Angular / npm
+  # Frontend: npm / Angular / React / Vue / Node projects
   - package-ecosystem: "npm"
-    directory: "/frontend/receipt-app"
+    directories:
+      - "/frontend"
+      - "/frontend/*"
+      - "/apps/*"
+      - "/packages/*"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -69,6 +102,9 @@ updates:
     cooldown:
       default-days: 7
     groups:
+      npm-security:
+        applies-to: security-updates
+        patterns: ["*"]
       angular-security:
         applies-to: security-updates
         patterns:
@@ -76,23 +112,29 @@ updates:
           - "rxjs"
           - "zone.js"
       npm-minor-patch:
+        applies-to: version-updates
         patterns: ["*"]
         update-types: ["minor", "patch"]
+        group-by: dependency-name
       npm-major:
+        applies-to: version-updates
         patterns: ["*"]
         update-types: ["major"]
+        group-by: dependency-name
     labels:
       - "dependencies"
-      - "npm"
-      - "frontend"
     commit-message:
       prefix: "dependabot(npm)"
       include: "scope"
     open-pull-requests-limit: 3
 
-  # 4. Backend / Python / pip
+  # Backend: Python / pip
   - package-ecosystem: "pip"
-    directory: "/backend"
+    directories:
+      - "/backend"
+      - "/api"
+      - "/services/*"
+      - "/lambda/*"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -105,16 +147,54 @@ updates:
         applies-to: security-updates
         patterns: ["*"]
       pip-minor-patch:
+        applies-to: version-updates
         patterns: ["*"]
         update-types: ["minor", "patch"]
+        group-by: dependency-name
       pip-major:
+        applies-to: version-updates
         patterns: ["*"]
         update-types: ["major"]
+        group-by: dependency-name
     labels:
       - "dependencies"
-      - "pip"
-      - "backend"
     commit-message:
       prefix: "dependabot(pip)"
       include: "scope"
     open-pull-requests-limit: 3
+
+  # Docker: base images in Dockerfiles
+  - package-ecosystem: "docker"
+    directories:
+      - "/"
+      - "/backend"
+      - "/frontend"
+      - "/docker"
+      - "/services/*"
+    schedule:
+      interval: "monthly"
+      day: "monday"
+      time: "08:00"
+      timezone: "Europe/Berlin"
+    cooldown:
+      default-days: 14
+    groups:
+      docker-security:
+        applies-to: security-updates
+        patterns: ["*"]
+      docker-minor-patch:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+        group-by: dependency-name
+      docker-major:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: ["major"]
+        group-by: dependency-name
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "dependabot(docker)"
+      include: "scope"
+    open-pull-requests-limit: 2
