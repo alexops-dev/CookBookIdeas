@@ -1,0 +1,120 @@
+version: 2
+
+updates:
+  # 1. GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Berlin"
+    cooldown:                 # delay to reduce supply-chain risk
+      default-days: 11
+    groups:
+      github-actions-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+      github-actions-major:   # majors isolated into their own PR
+        patterns: ["*"]
+        update-types: ["major"]
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "dependabot(github-actions)"
+      include: "scope"
+    open-pull-requests-limit: 2
+
+  # 2. Terraform: providers
+  - package-ecosystem: "terraform"
+    directories:       # add directories where terraform modules exist
+      - "/"
+      - "/modules/*"
+      - "/environments/*"
+      - "/environments/*/terraform_backend"
+      - "/terraform_backend"
+      - "/mongodb_atlas"
+    schedule:
+      interval: "monthly"
+      time: "06:30"
+      timezone: "Europe/Berlin"
+    cooldown:
+      default-days: 14       # delay to reduce supply-chain risk
+    groups:
+      terraform-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+        group-by: dependency-name
+      terraform-major:        # major bumps land alone for review/notification
+        patterns: ["*"]
+        update-types: ["major"]
+        group-by: dependency-name
+    labels:
+      - "dependencies"
+      - "terraform"
+    commit-message:
+      prefix: "dependabot(terraform)"
+      include: "scope"
+    open-pull-requests-limit: 5
+
+  # 3. Frontend / Angular / npm
+  - package-ecosystem: "npm"
+    directory: "/frontend/receipt-app"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:00"
+      timezone: "Europe/Berlin"
+    cooldown:
+      default-days: 7
+    groups:
+      angular-security:
+        applies-to: security-updates
+        patterns:
+          - "@angular*"
+          - "rxjs"
+          - "zone.js"
+      npm-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+      npm-major:
+        patterns: ["*"]
+        update-types: ["major"]
+    labels:
+      - "dependencies"
+      - "npm"
+      - "frontend"
+    commit-message:
+      prefix: "dependabot(npm)"
+      include: "scope"
+    open-pull-requests-limit: 3
+
+  # 4. Backend / Python / pip
+  - package-ecosystem: "pip"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:30"
+      timezone: "Europe/Berlin"
+    cooldown:
+      default-days: 7
+    groups:
+      pip-security:
+        applies-to: security-updates
+        patterns: ["*"]
+      pip-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+      pip-major:
+        patterns: ["*"]
+        update-types: ["major"]
+    labels:
+      - "dependencies"
+      - "pip"
+      - "backend"
+    commit-message:
+      prefix: "dependabot(pip)"
+      include: "scope"
+    open-pull-requests-limit: 3
