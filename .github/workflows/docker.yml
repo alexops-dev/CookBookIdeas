@@ -1,15 +1,27 @@
-name: CI/CD Pipeline
+name: Docker / Backend & Frontend CI
 
 on:
   push:
     branches:
       - main
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - ".github/workflows/docker.yml"
+
   pull_request:
     branches:
       - main
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - ".github/workflows/docker.yml"
+
+  workflow_dispatch:
 
 jobs:
   build:
+    name: Test backend and build frontend
     runs-on: ubuntu-latest
 
     services:
@@ -29,42 +41,38 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v6.2.0
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.8'
+          python-version: "3.8"
 
-      - name: Install dependencies (backend)
+      - name: Install backend dependencies
         run: |
           cd backend
           pip install -r requirements.txt
-        env:
-          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
 
-      - name: Run tests (backend)
+      - name: Run backend tests
         run: |
           cd backend
           pytest
         env:
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_DB: ${{ secrets.POST_DB || secrets.POSTGRES_DB }}
 
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
-      - name: Install dependencies (frontend)
+      - name: Install frontend dependencies
         run: |
           cd frontend
-          npm install
+          npm ci
 
-      - name: Build Angular app
+      - name: Build frontend
         run: |
           cd frontend
           npm run build
