@@ -29,6 +29,6 @@ SQLAlchemy==2.0.51
 starlette==0.49.1
 tomli==2.4.1
 typing_extensions==4.15.0
-uvicorn==0.49.0
+uvicorn==0.51.0
 Werkzeug==3.1.8
 zipp==3.20.2
