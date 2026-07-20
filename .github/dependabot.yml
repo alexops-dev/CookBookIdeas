@@ -24,9 +24,9 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "06:00"
+      interval: "semiannually"
+      # day: "monday"
+      # time: "06:00"
       timezone: "Europe/Berlin"
     cooldown:
       default-days: 14
